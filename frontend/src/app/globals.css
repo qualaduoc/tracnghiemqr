@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ac-grass: #8bd256;
+  --color-ac-grass-dark: #6ab237;
+  --color-ac-ground: #e1f4d9;
+  --color-ac-sky: #a7e0f9;
+  --color-ac-sky-light: #d6f2fe;
+  --color-ac-wood: #d59f5a;
+  --color-ac-wood-dark: #a87233;
+  --color-ac-red: #f46255;
+  --color-ac-blue: #3bb2e8;
+  --color-ac-yellow: #f8ce3c;
+  --color-ac-text: #5c4a3d;
+  --color-ac-white: #ffffff;
+}
+
+@layer base {
+  :root {
+    --background: var(--color-ac-ground);
+    --foreground: var(--color-ac-text);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    background-image: radial-gradient(var(--color-ac-grass) 1.5px, transparent 1.5px);
+    background-size: 30px 30px;
+  }
+}
+
+@layer components {
+  .btn-ac {
+    @apply relative inline-flex items-center justify-center font-bold overflow-hidden transition-all duration-200 active:scale-95 px-6 py-3 rounded-full text-white shadow-[0_4px_0_0_rgba(0,0,0,0.15)] hover:shadow-[0_2px_0_0_rgba(0,0,0,0.15)] hover:translate-y-[2px];
+  }
+  
+  .btn-ac-green {
+    @apply relative inline-flex items-center justify-center font-bold overflow-hidden transition-all duration-200 active:scale-95 px-6 py-3 rounded-full text-white shadow-[0_4px_0_0_rgba(0,0,0,0.15)] hover:shadow-[0_2px_0_0_rgba(0,0,0,0.15)] hover:translate-y-[2px] bg-[#6ab237] border-2 border-[#5c4a3d];
+  }
+  
+  .btn-ac-orange {
+    @apply relative inline-flex items-center justify-center font-bold overflow-hidden transition-all duration-200 active:scale-95 px-6 py-3 rounded-full text-white shadow-[0_4px_0_0_rgba(0,0,0,0.15)] hover:shadow-[0_2px_0_0_rgba(0,0,0,0.15)] hover:translate-y-[2px] bg-[#f4a255] border-2 border-[#5c4a3d];
+  }
+
+  .btn-ac-blue {
+    @apply relative inline-flex items-center justify-center font-bold overflow-hidden transition-all duration-200 active:scale-95 px-6 py-3 rounded-full text-white shadow-[0_4px_0_0_rgba(0,0,0,0.15)] hover:shadow-[0_2px_0_0_rgba(0,0,0,0.15)] hover:translate-y-[2px] bg-[#3bb2e8] border-2 border-[#5c4a3d];
+  }
+
+  .btn-ac-yellow {
+    @apply relative inline-flex items-center justify-center font-bold overflow-hidden transition-all duration-200 active:scale-95 px-6 py-3 rounded-full text-[#5c4a3d] shadow-[0_4px_0_0_rgba(0,0,0,0.15)] hover:shadow-[0_2px_0_0_rgba(0,0,0,0.15)] hover:translate-y-[2px] bg-[#f8ce3c] border-2 border-[#5c4a3d];
+  }
+
+  .ac-card {
+    @apply bg-white border-4 border-[#5c4a3d] rounded-3xl p-6 shadow-lg;
+    box-shadow: 8px 8px 0px 0px rgba(92, 74, 61, 0.1);
+  }
+}
