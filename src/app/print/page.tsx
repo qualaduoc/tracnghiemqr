@@ -2,7 +2,7 @@
 
 import { useState, useRef, Suspense, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Printer, Settings, Loader2 } from "lucide-react";
+import { ArrowLeft, Printer, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import { useSearchParams } from "next/navigation";
@@ -13,7 +13,6 @@ type StudentData = { id: string, class_id: string, name: string, avatar_url: str
 // Tách logic dùng useSearchParams ra một component con và bọc trong Suspense
 // để tránh lỗi Deopt của Next.js khi build.
 function PrintContent() {
-  const [markerType, setMarkerType] = useState<"aruco" | "qr">("aruco");
   const printRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
   const studentIdParam = searchParams.get("studentId");
@@ -82,28 +81,6 @@ function PrintContent() {
         </motion.button>
       </div>
 
-      {/* Settings Panel - hidden when printing */}
-      <div className="print:hidden ac-card max-w-4xl mx-auto w-full mb-8 flex flex-col sm:flex-row items-center gap-4 justify-between bg-white/80 backdrop-blur-sm">
-        <div className="flex items-center gap-3">
-          <Settings className="text-[#a87233]" />
-          <span className="text-xl font-bold">Chọn loại mã:</span>
-        </div>
-        <div className="flex bg-[#e1f4d9] p-1 rounded-full border-2 border-[#5c4a3d]">
-          <button 
-            onClick={() => setMarkerType("aruco")}
-            className={`px-4 sm:px-6 py-2 rounded-full font-bold transition-all ${markerType === "aruco" ? "bg-[#6ab237] text-white" : "text-[#5c4a3d] hover:bg-white/50"}`}
-          >
-            Mã ArUco (Khuyên dùng)
-          </button>
-          <button 
-            onClick={() => setMarkerType("qr")}
-            className={`px-4 sm:px-6 py-2 rounded-full font-bold transition-all ${markerType === "qr" ? "bg-[#3bb2e8] text-white" : "text-[#5c4a3d] hover:bg-white/50"}`}
-          >
-            Mã QR
-          </button>
-        </div>
-      </div>
-
       {/* Print Area */}
       <div ref={printRef} className="max-w-4xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-8 print:grid-cols-2 print:gap-4 print:max-w-none">
         {displayStudents.map((student) => (
@@ -117,17 +94,7 @@ function PrintContent() {
 
             {/* Marker */}
             <div className="w-1/2 h-1/2 flex items-center justify-center relative z-0">
-              {markerType === "qr" ? (
-                <QRCodeSVG value={`{"arucoId":${student.aruco_id},"studentId":"${student.id}"}`} size={200} level="H" />
-              ) : (
-                <div className="w-[200px] h-[200px] bg-black p-4 grid grid-cols-5 grid-rows-5 gap-0 relative">
-                  {/* Mock ArUco Grid for UI demonstration */}
-                  {[...Array(25)].map((_, i) => (
-                    <div key={i} className={Math.random() > 0.5 ? "bg-white" : "bg-black"}></div>
-                  ))}
-                  {/* A visual hint for the "Top" edge of ArUco marker if needed, but usually the printed A-B-C-D is enough */}
-                </div>
-              )}
+              <QRCodeSVG value={`{"arucoId":${student.aruco_id},"studentId":"${student.id}"}`} size={200} level="H" />
             </div>
 
             {/* Student Info Footer - Compact design to avoid overlapping C */}
@@ -155,7 +122,11 @@ export default function PrintCards() {
       {/* Custom print styles to ensure colors and layout print correctly */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          body { background: white !important; }
+          body { 
+            background: white !important; 
+            -webkit-print-color-adjust: exact !important; 
+            print-color-adjust: exact !important; 
+          }
           .aspect-square { width: 100%; height: auto; aspect-ratio: 1/1; margin-bottom: 2rem; }
           @page { size: A4; margin: 1cm; }
         }
