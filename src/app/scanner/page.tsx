@@ -48,8 +48,6 @@ export default function ScannerScreen() {
     const channel = supabase.channel('scanner_sessions')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, (payload) => {
         fetchSession();
-        // Xóa cache quét khi đổi câu hỏi
-        scannedStudentsRef.current.clear();
       })
       .subscribe();
 
@@ -57,6 +55,11 @@ export default function ScannerScreen() {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  // Xóa cache quét khi đổi câu hỏi (chỉ khi question id thực sự thay đổi)
+  useEffect(() => {
+    scannedStudentsRef.current.clear();
+  }, [session?.current_question_id]);
 
   const fetchQuestion = async (qId: string) => {
     const { data } = await supabase.from('questions').select('*').eq('id', qId).single();

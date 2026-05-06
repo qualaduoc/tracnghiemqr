@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, ArrowLeft, Loader2, ChevronRight, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
@@ -35,6 +35,14 @@ export default function PresenterScreen() {
   const [questions, setQuestions] = useState<QuestionData[]>([]);
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, { isCorrect: boolean }>>({}); // studentId -> status
+
+  const currentQIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (questions.length > 0) {
+      currentQIdRef.current = questions[currentQIndex]?.id || null;
+    }
+  }, [currentQIndex, questions]);
 
   // Timer
   const [timeLeft, setTimeLeft] = useState(30);
@@ -97,23 +105,23 @@ export default function PresenterScreen() {
 
   const subscribeToAnswers = (sessionId: string) => {
     supabase.channel(`answers_${sessionId}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'answers', filter: `session_id=eq.${sessionId}` }, payload => {
-        const newAnswer = payload.new;
-        // Kiểm tra đúng sai
-        const currentQ = questions[currentQIndex]; // Lỗi closure có thể xảy ra, cần dùng callback cho setAnswers
-        if (!currentQ) return;
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'answers', filter: `session_id=eq.${sessionId}` }, payload => {
+        const newAnswer = payload.new as any;
         
-        // ... (Logic này sẽ phức tạp hơn chút nếu check đúng sai ở frontend, nhưng ta có thể fetch câu trả lời để đơn giản, 
-        // hoặc lưu đáp án bé chọn vào payload. Vì demo, ta lấy answers lưu từ Scanner. Scanner sẽ gửi optionId).
-        // Tạm thời giả lập realtime ở đây bằng cách lấy trực tiếp từ data payload
-        // Hiện schema chưa có option_id trong answers, vậy Scanner sẽ tự update điểm? 
-        // -> Schema đang lưu (session_id, question_id, student_id). Thêm `is_correct`?
-        // Đáng lẽ bảng answers cần lưu `is_correct` boolean. Do chưa có, giả định Scanner tính rồi bắn vào?
-        // Ta cần reload Answers.
+        if (newAnswer && newAnswer.student_id) {
+          setAnswers(prev => {
+            // Chỉ cập nhật nếu đáp án thuộc về câu hỏi hiện tại đang hiển thị
+            if (currentQIdRef.current && newAnswer.question_id !== currentQIdRef.current) {
+              return prev;
+            }
+            return {
+              ...prev,
+              [newAnswer.student_id]: { isCorrect: newAnswer.is_correct }
+            };
+          });
+        }
       })
       .subscribe();
-      
-    // (Lưu ý: Vì chưa có chức năng Scanner thực tế, phần này để sẵn khung)
   };
 
   const fireConfetti = () => {
