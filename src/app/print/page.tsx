@@ -84,27 +84,31 @@ function PrintContent() {
       {/* Print Area */}
       <div ref={printRef} className="max-w-4xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-8 print:grid-cols-2 print:gap-4 print:max-w-none">
         {displayStudents.map((student) => (
-          <div key={student.id} className="aspect-square bg-white border-8 border-black p-4 relative flex flex-col items-center justify-center break-inside-avoid shadow-lg print:shadow-none print:border-4">
+          <div key={student.id} className="w-full flex flex-col items-center break-inside-avoid mb-8 print:mb-8">
             
-            {/* The 4 Corners (A, B, C, D) */}
-            <div className="absolute top-2 left-1/2 -translate-x-1/2 text-6xl font-black">A</div>
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-6xl font-black rotate-180">C</div>
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-6xl font-black -rotate-90">D</div>
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-6xl font-black rotate-90">B</div>
+            {/* Thẻ Quét - Giữ nguyên viền đen và layout thẻ */}
+            <div className="w-full aspect-square bg-white border-8 border-black p-4 relative flex flex-col items-center justify-center shadow-lg print:shadow-none print:border-4">
+              
+              {/* The 4 Corners (A, B, C, D) */}
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 text-6xl font-black">A</div>
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-6xl font-black rotate-180">C</div>
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-6xl font-black -rotate-90">D</div>
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-6xl font-black rotate-90">B</div>
 
-            {/* Marker */}
-            <div className="w-1/2 h-1/2 flex items-center justify-center relative z-0">
-              <QRCodeSVG value={`{"arucoId":${student.aruco_id},"studentId":"${student.id}"}`} size={200} level="H" />
-            </div>
-
-            {/* Student Info Footer - Compact design to avoid overlapping C */}
-            <div className="absolute bottom-4 left-4 flex flex-col items-center gap-1 bg-white px-2 py-2 border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] print:shadow-none max-w-[35%] z-10">
-              <div className="flex items-center gap-1">
-                <span className="text-2xl">{student.avatar_url}</span>
-                <span className="text-sm font-black text-white bg-black px-2 py-0.5 rounded-full">Mã: {student.aruco_id}</span>
+              {/* Marker */}
+              <div className="w-[50%] h-[50%] flex items-center justify-center relative z-0">
+                <QRCodeSVG value={`{"arucoId":${student.aruco_id},"studentId":"${student.id}"}`} style={{ width: "100%", height: "100%" }} level="H" />
               </div>
-              <span className="text-sm sm:text-base font-bold text-center leading-tight line-clamp-2 w-full">{student.name}</span>
+
             </div>
+
+            {/* Tên học sinh đặt HẲN BÊN NGOÀI thẻ quét */}
+            <div className="mt-4 flex items-center justify-center gap-2 text-2xl sm:text-3xl font-bold text-red-600 print:text-black w-full text-center">
+              {student.avatar_url && <span>{student.avatar_url}</span>}
+              <span>Mã {String(student.aruco_id).padStart(2, '0')}:</span>
+              <span className="uppercase">{student.name}</span>
+            </div>
+
           </div>
         ))}
       </div>
@@ -127,7 +131,7 @@ export default function PrintCards() {
             -webkit-print-color-adjust: exact !important; 
             print-color-adjust: exact !important; 
           }
-          .aspect-square { width: 100%; height: auto; aspect-ratio: 1/1; margin-bottom: 2rem; }
+          .aspect-square { width: 100%; height: auto; aspect-ratio: 1/1; }
           @page { size: A4; margin: 1cm; }
         }
       `}} />

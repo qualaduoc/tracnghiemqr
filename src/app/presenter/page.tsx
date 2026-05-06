@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, ArrowLeft, Loader2, ChevronRight, CheckCircle2 } from "lucide-react";
+import { Play, ArrowLeft, Loader2, ChevronRight, CheckCircle2, Volume2, VolumeX } from "lucide-react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
 import { supabase } from "../../utils/supabaseClient";
@@ -38,6 +38,66 @@ export default function PresenterScreen() {
 
   const currentQIdRef = useRef<string | null>(null);
 
+  // Âm thanh
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
+
+  const initAudio = () => {
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    if (audioCtxRef.current.state === 'suspended') {
+      audioCtxRef.current.resume();
+    }
+  };
+
+  const playSound = (type: 'tick' | 'tada') => {
+    if (isMuted || !audioCtxRef.current) return;
+    const ctx = audioCtxRef.current;
+    if (ctx.state === 'suspended') ctx.resume();
+
+    if (type === 'tick') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800, ctx.currentTime);
+      gain.gain.setValueAtTime(0.05, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.1);
+    } else if (type === 'tada') {
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc1.type = 'triangle';
+      osc2.type = 'sine';
+      
+      osc1.frequency.setValueAtTime(440, ctx.currentTime);
+      osc2.frequency.setValueAtTime(554.37, ctx.currentTime);
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.05);
+      gain.gain.setValueAtTime(0.2, ctx.currentTime + 0.15);
+      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.2);
+
+      osc1.frequency.setValueAtTime(554.37, ctx.currentTime + 0.2);
+      osc2.frequency.setValueAtTime(659.25, ctx.currentTime + 0.2);
+      gain.gain.setValueAtTime(0, ctx.currentTime + 0.2);
+      gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.25);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.0);
+
+      osc1.start(ctx.currentTime);
+      osc2.start(ctx.currentTime);
+      osc1.stop(ctx.currentTime + 1.0);
+      osc2.stop(ctx.currentTime + 1.0);
+    }
+  };
+
   useEffect(() => {
     if (questions.length > 0) {
       currentQIdRef.current = questions[currentQIndex]?.id || null;
@@ -67,6 +127,7 @@ export default function PresenterScreen() {
   };
 
   const handleStartSession = async () => {
+    initAudio(); // Bật audio context khi user tương tác
     if (!selectedClass || !selectedSet) return;
     setLoading(true);
 
@@ -130,13 +191,17 @@ export default function PresenterScreen() {
 
   useEffect(() => {
     if (isPlaying && timeLeft > 0) {
-      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      const timer = setTimeout(() => {
+        setTimeLeft(timeLeft - 1);
+        playSound('tick');
+      }, 1000);
       return () => clearTimeout(timer);
     } else if (isPlaying && timeLeft === 0) {
       // Hết giờ
       setIsPlaying(false);
       setShowAnswer(true);
       fireConfetti(); // Bắn pháo hoa báo hiệu hết giờ / hiện đáp án
+      playSound('tada');
     }
   }, [timeLeft, isPlaying]);
 
@@ -236,8 +301,15 @@ export default function PresenterScreen() {
         <button onClick={() => { if(confirm('Thoát phiên chơi?')) setAppState('select') }} className="btn-ac-orange flex items-center gap-2">
           <ArrowLeft size={24} /> Kết thúc
         </button>
-        <div className="bg-white border-4 border-[#5c4a3d] rounded-full px-8 py-3 shadow-[0_4px_0_0_#5c4a3d]">
+        <div className="bg-white border-4 border-[#5c4a3d] rounded-full px-6 py-2 shadow-[0_4px_0_0_#5c4a3d] flex items-center gap-6">
           <h2 className="text-xl font-bold text-[#5c4a3d]">Lớp {className} - Bộ: {setName}</h2>
+          <button 
+            onClick={() => setIsMuted(!isMuted)} 
+            className={`p-2 rounded-full transition-colors ${isMuted ? 'bg-gray-200 text-gray-500' : 'bg-[#e1f4d9] text-[#8bd256]'}`}
+            title={isMuted ? "Bật âm thanh" : "Tắt âm thanh"}
+          >
+            {isMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
+          </button>
         </div>
         <div className="w-[120px]"></div>
       </div>
@@ -313,6 +385,7 @@ export default function PresenterScreen() {
                     setTimeLeft(0);
                     setShowAnswer(true);
                     fireConfetti();
+                    playSound('tada');
                   }} 
                   className="btn-ac-orange py-2 px-4 text-base w-full flex items-center justify-center gap-2"
                 >

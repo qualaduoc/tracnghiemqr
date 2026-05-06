@@ -77,7 +77,13 @@ export default function ScannerScreen() {
 
     const startCamera = async () => {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            facingMode: "environment",
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          } 
+        });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           videoRef.current.setAttribute("playsinline", "true"); // required to tell iOS safari we don't want fullscreen
