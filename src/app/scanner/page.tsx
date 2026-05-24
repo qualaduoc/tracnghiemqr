@@ -11,6 +11,16 @@ type SessionData = { id: string, class_id: string, current_question_id: string }
 type QuestionData = { id: string, options: any[] };
 
 export default function ScannerScreen() {
+  const [authorized, setAuthorized] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem("app_is_logged_in") !== "true") {
+      window.location.href = `/?redirect=${window.location.pathname}`;
+    } else {
+      setAuthorized(true);
+    }
+  }, []);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
@@ -210,6 +220,15 @@ export default function ScannerScreen() {
       // Bỏ qua các QR code không phải JSON của mình
     }
   };
+
+  if (!authorized) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#fffdf8] p-4 text-center">
+        <Loader2 className="animate-spin text-[#a87233] mb-4" size={48} />
+        <h2 className="text-2xl font-bold text-[#5c4a3d] mb-2">Đang kiểm tra quyền truy cập...</h2>
+      </div>
+    );
+  }
 
   if (!session) {
     return (

@@ -117,6 +117,25 @@ function PrintContent() {
 }
 
 export default function PrintCards() {
+  const [authorized, setAuthorized] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem("app_is_logged_in") !== "true") {
+      window.location.href = `/?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+    } else {
+      setAuthorized(true);
+    }
+  }, []);
+
+  if (!authorized) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#e1f4d9]">
+        <Loader2 className="animate-spin text-[#5c4a3d] mb-4" size={48} />
+        <h2 className="text-2xl font-bold text-[#5c4a3d]">Đang kiểm tra quyền truy cập...</h2>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen p-4 sm:p-8 bg-[#e1f4d9]">
       <Suspense fallback={<div className="text-center font-bold text-2xl mt-20">Đang tải thẻ...</div>}>

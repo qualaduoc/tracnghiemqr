@@ -20,6 +20,16 @@ type Question = {
 };
 
 export default function QuestionsManagement() {
+  const [authorized, setAuthorized] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem("app_is_logged_in") !== "true") {
+      window.location.href = `/?redirect=${window.location.pathname}`;
+    } else {
+      setAuthorized(true);
+    }
+  }, []);
+
   const [questionSets, setQuestionSets] = useState<QuestionSet[]>([]);
   const [selectedSet, setSelectedSet] = useState<string | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -279,11 +289,13 @@ export default function QuestionsManagement() {
     }
   };
 
-  if (loading) {
+  if (!authorized || loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[#e1f4d9]">
         <Loader2 className="animate-spin text-[#5c4a3d] mb-4" size={48} />
-        <h2 className="text-2xl font-bold text-[#5c4a3d]">Đang tải bộ câu hỏi...</h2>
+        <h2 className="text-2xl font-bold text-[#5c4a3d]">
+          {!authorized ? "Đang kiểm tra quyền truy cập..." : "Đang tải bộ câu hỏi..."}
+        </h2>
       </div>
     );
   }

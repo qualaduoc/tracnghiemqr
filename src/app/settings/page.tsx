@@ -7,6 +7,16 @@ import Link from "next/link";
 import { supabase } from "../../utils/supabaseClient";
 
 export default function SettingsManagement() {
+  const [authorized, setAuthorized] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem("app_is_logged_in") !== "true") {
+      window.location.href = `/?redirect=${window.location.pathname}`;
+    } else {
+      setAuthorized(true);
+    }
+  }, []);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -63,11 +73,13 @@ export default function SettingsManagement() {
     setSaving(false);
   };
 
-  if (loading) {
+  if (!authorized || loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[#e1f4d9]">
         <Loader2 className="animate-spin text-[#5c4a3d] mb-4" size={48} />
-        <h2 className="text-2xl font-bold text-[#5c4a3d]">Đang tải cài đặt...</h2>
+        <h2 className="text-2xl font-bold text-[#5c4a3d]">
+          {!authorized ? "Đang kiểm tra quyền truy cập..." : "Đang tải cài đặt..."}
+        </h2>
       </div>
     );
   }

@@ -10,6 +10,16 @@ type ClassData = { id: string, name: string };
 type StudentData = { id: string, class_id: string, name: string, avatar_url: string, aruco_id: number };
 
 export default function ClassesManagement() {
+  const [authorized, setAuthorized] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem("app_is_logged_in") !== "true") {
+      window.location.href = `/?redirect=${window.location.pathname}`;
+    } else {
+      setAuthorized(true);
+    }
+  }, []);
+
   const [classes, setClasses] = useState<ClassData[]>([]);
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [students, setStudents] = useState<StudentData[]>([]);
@@ -161,11 +171,13 @@ export default function ClassesManagement() {
     }
   };
 
-  if (loading) {
+  if (!authorized || loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[#e1f4d9]">
         <Loader2 className="animate-spin text-[#5c4a3d] mb-4" size={48} />
-        <h2 className="text-2xl font-bold text-[#5c4a3d]">Đang lấy dữ liệu từ Supabase...</h2>
+        <h2 className="text-2xl font-bold text-[#5c4a3d]">
+          {!authorized ? "Đang kiểm tra quyền truy cập..." : "Đang lấy dữ liệu từ Supabase..."}
+        </h2>
       </div>
     );
   }
