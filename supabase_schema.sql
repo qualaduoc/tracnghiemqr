@@ -102,3 +102,25 @@ VALUES (1, 'Lớp Học Vui Vẻ!', 'Chào cô giáo, hôm nay chúng ta chơi t
 
 ALTER TABLE public.app_settings ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Cho phép tất cả trên app_settings" ON public.app_settings FOR ALL USING (true) WITH CHECK (true);
+
+-- ==========================================
+-- Cấu hình Storage Bucket cho ảnh câu hỏi
+-- ==========================================
+-- Bật RLS cho storage.objects (thường được bật sẵn trong Supabase)
+-- ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+
+-- Cho phép tất cả mọi người đọc ảnh trong bucket question-images
+-- CREATE POLICY "Allow Public Access to question-images" ON storage.objects
+--     FOR SELECT USING (bucket_id = 'question-images');
+
+-- Cho phép tất cả mọi người tải ảnh lên bucket question-images (nặc danh)
+-- CREATE POLICY "Allow Anonymous Uploads to question-images" ON storage.objects
+--     FOR INSERT WITH CHECK (bucket_id = 'question-images');
+
+-- Cho phép cập nhật và xóa ảnh trong bucket question-images
+-- CREATE POLICY "Allow Public Modify to question-images" ON storage.objects
+--     FOR UPDATE USING (bucket_id = 'question-images');
+
+-- CREATE POLICY "Allow Public Delete from question-images" ON storage.objects
+--     FOR DELETE USING (bucket_id = 'question-images');
+

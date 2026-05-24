@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Plus, BookOpen, Clock, Settings, Image as ImageIcon, X, Trash2, Loader2, Save } from "lucide-react";
+import { ArrowLeft, Plus, BookOpen, Clock, Settings, Image as ImageIcon, X, Trash2, Loader2, Save, Upload } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "../../utils/supabaseClient";
+import { getDirectImageUrl } from "../../utils/imageHelper";
 
 type QuestionSet = { id: string, name: string };
 type Option = { id: string, text: string };
@@ -44,6 +45,50 @@ export default function QuestionsManagement() {
     ],
     correct_option: "A"
   });
+
+  const [uploading, setUploading] = useState(false);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Khầy ơi, tệp tải lên phải là hình ảnh nhé!");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Khầy ơi, kích thước ảnh tối đa là 5MB thôi ạ!");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from('question-images')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('question-images')
+        .getPublicUrl(filePath);
+
+      setQuestionModal(prev => ({ ...prev, image_url: publicUrl }));
+    } catch (error: any) {
+      alert("Lỗi tải ảnh lên: " + error.message);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -332,7 +377,7 @@ export default function QuestionsManagement() {
                   {q.image_url ? (
                     <div className="mb-4 rounded-xl overflow-hidden border-4 border-[#5c4a3d] bg-white h-48 w-full relative flex items-center justify-center">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={q.image_url} alt="Minh hoạ" className="max-h-full max-w-full object-contain" />
+                      <img src={getDirectImageUrl(q.image_url)} alt="Minh hoạ" className="max-h-full max-w-full object-contain" />
                     </div>
                   ) : (
                     <div className="mb-4 h-16 bg-white/50 border-2 border-dashed border-[#5c4a3d] rounded-xl flex items-center justify-center text-[#a87233] gap-2">
@@ -442,18 +487,59 @@ export default function QuestionsManagement() {
 
                     {/* Ảnh minh hoạ */}
                     <div>
-                      <label className="block text-sm font-bold text-[#a87233] mb-1">Link ảnh minh hoạ (Tùy chọn)</label>
-                      <input 
-                        type="url" 
-                        placeholder="https://..." 
-                        value={questionModal.image_url} 
-                        onChange={(e) => setQuestionModal({...questionModal, image_url: e.target.value})} 
-                        className="w-full bg-white border-4 border-[#5c4a3d] rounded-2xl px-4 py-3 font-medium text-[#5c4a3d] focus:outline-none focus:border-[#3bb2e8] transition-colors" 
-                      />
+                      <div className="flex flex-col sm:flex-row gap-3 items-end">
+                        <div className="flex-1 w-full">
+                          <label className="block text-sm font-bold text-[#a87233] mb-1">Link ảnh minh hoạ (Hỗ trợ Google Drive)</label>
+                          <input 
+                            type="url" 
+                            placeholder="Dán link ảnh hoặc link Google Drive vào đây..." 
+                            value={questionModal.image_url} 
+                            onChange={(e) => setQuestionModal({...questionModal, image_url: e.target.value})} 
+                            className="w-full bg-white border-4 border-[#5c4a3d] rounded-2xl px-4 py-3 font-medium text-[#5c4a3d] focus:outline-none focus:border-[#3bb2e8] transition-colors" 
+                          />
+                        </div>
+                        <div className="w-full sm:w-auto">
+                          <label className="hidden sm:block text-sm font-bold text-transparent mb-1">Tải lên</label>
+                          <input 
+                            type="file" 
+                            id="image-file-input" 
+                            accept="image/*" 
+                            onChange={handleImageUpload} 
+                            className="hidden" 
+                          />
+                          <button
+                            type="button"
+                            disabled={uploading}
+                            onClick={() => document.getElementById('image-file-input')?.click()}
+                            className="btn-ac-yellow w-full h-[54px] px-6 text-sm font-bold flex items-center justify-center gap-2 whitespace-nowrap shadow-[0_4px_0_0_#5c4a3d]"
+                          >
+                            {uploading ? (
+                              <>
+                                <Loader2 className="animate-spin" size={16} />
+                                <span>Đang tải...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Upload size={16} />
+                                <span>Tải Ảnh Lên</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                      
                       {questionModal.image_url && (
-                        <div className="mt-2 rounded-xl overflow-hidden border-2 border-dashed border-[#5c4a3d] bg-white h-24 w-fit max-w-full">
-                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={questionModal.image_url} alt="Preview" className="h-full w-auto object-contain" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                        <div className="mt-3 rounded-2xl overflow-hidden border-4 border-[#5c4a3d] bg-white h-32 w-fit max-w-full relative group">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={getDirectImageUrl(questionModal.image_url)} alt="Preview" className="h-full w-auto object-contain" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                          <button 
+                            type="button" 
+                            onClick={() => setQuestionModal({...questionModal, image_url: ""})} 
+                            className="absolute top-1 right-1 bg-[#f46255] hover:bg-[#d54e42] text-white p-1 rounded-full border-2 border-[#5c4a3d] transition-colors"
+                            title="Xóa ảnh"
+                          >
+                            <X size={14} strokeWidth={3} />
+                          </button>
                         </div>
                       )}
                     </div>

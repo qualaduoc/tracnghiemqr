@@ -6,6 +6,7 @@ import { Play, ArrowLeft, Loader2, ChevronRight, CheckCircle2, Volume2, VolumeX 
 import Link from "next/link";
 import confetti from "canvas-confetti";
 import { supabase } from "../../utils/supabaseClient";
+import { getDirectImageUrl } from "../../utils/imageHelper";
 
 type ClassData = { id: string, name: string };
 type QuestionSet = { id: string, name: string };
@@ -333,7 +334,7 @@ export default function PresenterScreen() {
             {currentQ.image_url ? (
               <div className="w-full flex-1 bg-[#f9f9f9] border-4 border-[#5c4a3d] rounded-2xl flex items-center justify-center mb-4 overflow-hidden min-h-[30vh]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={currentQ.image_url} alt="Minh họa" className="max-h-[45vh] w-auto object-contain" />
+                <img src={getDirectImageUrl(currentQ.image_url)} alt="Minh họa" className="max-h-[45vh] w-auto object-contain" />
               </div>
             ) : (
               <div className="w-full flex-1 bg-[#e1f4d9] border-4 border-dashed border-[#8bd256] rounded-2xl flex items-center justify-center mb-4 min-h-[30vh]">
